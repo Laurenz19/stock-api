@@ -93,6 +93,13 @@
 		    <version>8.0.28</version>
 		</dependency>
 		
+		<dependency>
+		   <groupId>com.zaxxer</groupId>
+		   <artifactId>HikariCP</artifactId>
+		   <version>5.0.1</version>
+		</dependency>
+		
+		
     </dependencies>
     <properties>
         <jersey.version>3.0.3</jersey.version>
