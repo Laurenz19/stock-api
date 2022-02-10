@@ -9,6 +9,11 @@ import javax.sql.DataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+
+/**
+ *Created on 10/02/2022
+ *by SAMBANY Michel Laurenzio 
+ **/
 public class HikariConnection {
 	
 	private static DataSource dataSource;

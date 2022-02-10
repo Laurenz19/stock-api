@@ -7,6 +7,11 @@ import java.sql.SQLException;
 
 import org.stockapp.stock_api.HikariConnection;
 
+
+/**
+ *Created on 10/02/2022
+ *by SAMBANY Michel Laurenzio 
+ **/
 public class Queries {
 	
 	private HikariConnection hikariConn = new HikariConnection("localhost", "3306", "root", "", "stockdb");
@@ -53,6 +58,7 @@ public class Queries {
 		try{	
 			PreparedStatement statement = connection.prepareStatement(sql);
 			ResultSet result = statement.executeQuery(sql);
+			System.out.println(statement);
 			System.out.println(result);
 			return result;
 			
@@ -69,6 +75,7 @@ public class Queries {
 		try{
 			PreparedStatement statement = connection.prepareStatement(sql);
 			System.out.println("deleted");
+			System.out.println(statement);
 			statement.execute();
 			statement.close();
 			

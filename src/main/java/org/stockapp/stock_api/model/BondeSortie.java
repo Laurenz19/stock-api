@@ -1,0 +1,53 @@
+package org.stockapp.stock_api.model;
+
+import java.util.Date;
+
+
+/**
+ *Created on 10/02/2022
+ *by SAMBANY Michel Laurenzio 
+ **/
+public class BondeSortie {
+	
+	private String id;
+	private Produit produit;
+	private int qteSortie;
+	private Date dateSortie;
+	
+	
+	public BondeSortie() {
+		
+	}
+	
+	public BondeSortie(Produit produit, int qteSortie, Date dateSortie) {
+		super();
+		this.produit = produit;
+		this.qteSortie = qteSortie;
+		this.dateSortie = dateSortie;
+	}
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public Produit getProduit() {
+		return produit;
+	}
+	public void setProduit(Produit produit) {
+		this.produit = produit;
+	}
+	public int getQteSortie() {
+		return qteSortie;
+	}
+	public void setQteSortie(int qteSortie) {
+		this.qteSortie = qteSortie;
+	}
+	public Date getDateSortie() {
+		return dateSortie;
+	}
+	public void setDateSortie(Date dateSortie) {
+		this.dateSortie = dateSortie;
+	}
+}
