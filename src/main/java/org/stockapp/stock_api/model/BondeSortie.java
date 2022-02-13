@@ -2,11 +2,14 @@ package org.stockapp.stock_api.model;
 
 import java.util.Date;
 
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 
 /**
  *Created on 10/02/2022
  *by SAMBANY Michel Laurenzio 
  **/
+@XmlRootElement
 public class BondeSortie {
 	
 	private String id;

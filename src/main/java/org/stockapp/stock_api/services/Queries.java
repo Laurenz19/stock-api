@@ -70,7 +70,11 @@ public class Queries {
 	}
 	
 	public void delete(String table, String conditions) {
-		String sql = "DELETE FROM " + table + " WHERE "+ conditions;
+		String sql = "DELETE FROM " + table;
+		
+		if(conditions != "") {
+			sql = "DELETE FROM " + table + " WHERE "+ conditions;
+		}
 		
 		try{
 			PreparedStatement statement = connection.prepareStatement(sql);
@@ -83,4 +87,26 @@ public class Queries {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public String maxId(String table) {
+
+		String sql = "SELECT MAX(id) AS max_id  FROM "+table;
+		String id= "";
+		
+		try{	
+			PreparedStatement statement = connection.prepareStatement(sql);
+			ResultSet result = statement.executeQuery();
+			System.out.println(statement);
+			System.out.println(result);
+			
+			while (result.next()){
+				id=result.getString("max_id");
+			}
+			return id;
+			
+		}catch(SQLException e){
+			throw new RuntimeException(e);
+		}
+	}
+	
 }
