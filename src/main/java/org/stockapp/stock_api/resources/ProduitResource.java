@@ -17,7 +17,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -71,8 +70,8 @@ public class ProduitResource {
 	@PUT
 	@Path("/{produitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateProduit(Produit produit, @PathParam("produitId") String id) {
-		produit.setId(id);
+	public Response updateProduit(Produit produit, @BeanParam ProduitFilterBean filterBean) {
+		produit.setId(filterBean.getId());
 		
 		Produit __produit = this.produitService.getProduitbyDesign(produit.getDesign());
 		
@@ -101,8 +100,8 @@ public class ProduitResource {
 	
 	@DELETE
 	@Path("/{produitId}")
-	public Response deleteProduit(@PathParam("produitId") String id) {
-		this.produitService.deleteProduit(id);
+	public Response deleteProduit(@BeanParam ProduitFilterBean filterBean) {
+		this.produitService.deleteProduit(filterBean.getId());
 		return Response.noContent()
 				       .build();
 	}
