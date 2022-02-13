@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.stockapp.stock_api.exception.DataNotFoundException;
 import org.stockapp.stock_api.model.Produit;
 
 import com.github.javafaker.Faker;
@@ -19,6 +20,7 @@ public class ProduitService {
 	public Produit createProduit(Produit produit) {
 		String values = "'"+produit.getDesign()+"', "+produit.getStock();
 		q.create(table, column, values);
+		
 		produit = getProduit(maxId());
 		
 		return produit;
@@ -82,11 +84,39 @@ public class ProduitService {
     
 	}
 	
+	public Produit getProduitbyDesign(String design) {
+		String condition= "design= '"+design+"'";
+		ResultSet result = q.read(table, "*", condition);
+    	System.out.println(result);
+    	Produit produit = new Produit();
+    	
+    	try {
+    		if (result.next() == false) {
+    		     produit = null;
+    		}else {
+    			 
+    			 do {
+    				produit.setId(result.getString("id"));
+    				produit.setDesign(result.getString("design"));
+    				produit.setStock(result.getInt("stock"));
+    		      } while (result.next());	
+    			
+    		}
+    		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	return produit;
+    
+	}
+	
 	
 	public Produit updateProduit(Produit produit) {
 		Produit __produit = this.getProduit(produit.getId());
 		if(__produit == null) {
-			System.out.println("The product with an id #"+produit.getId()+ " is not exist!");
+			throw new DataNotFoundException(String.format("Product with id %s is not found", produit.getId()));
 		}
 		String values = "design='"+produit.getDesign()+"', stock="+produit.getStock();
 		String condition= "id= '"+produit.getId()+"'";
@@ -130,16 +160,22 @@ public class ProduitService {
     	List<Produit> produits = new ArrayList<Produit>();
     	
     	try {
-    		
-			while (result.next()){
-				Produit produit = new Produit();
-				
-				produit.setId(result.getString("id"));
-				produit.setDesign(result.getString("design"));
-				produit.setStock(result.getInt("stock"));
-				produits.add(produit);
-				
-			}
+    		if (result.next() == false) {
+    			produits = new ArrayList<Produit>();
+	   		}else {
+	   			 
+	   			 do {
+	   				Produit produit = new Produit();
+	   				
+	   				produit.setId(result.getString("id"));
+	   				produit.setDesign(result.getString("design"));
+	   				produit.setStock(result.getInt("stock"));
+	   				
+	   				produits.add(produit);
+	   		      } while (result.next());	
+	   			
+	   		}
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

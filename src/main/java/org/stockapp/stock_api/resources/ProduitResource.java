@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.stockapp.stock_api.exception.DataNotFoundException;
 import org.stockapp.stock_api.model.Produit;
 import org.stockapp.stock_api.resources.beans.ProduitFilterBean;
 import org.stockapp.stock_api.services.ProduitService;
@@ -53,6 +54,11 @@ public class ProduitResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createProduit(Produit produit, @Context UriInfo uriInfo){
+		Produit __produit = this.produitService.getProduitbyDesign(produit.getDesign());
+		
+		if(__produit != null) {
+			throw new DataNotFoundException(String.format("Product with design %s exist in the database", produit.getDesign()));
+		}
 		produit =this.produitService.createProduit(produit);
 		
 		
@@ -67,6 +73,14 @@ public class ProduitResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateProduit(Produit produit, @PathParam("produitId") String id) {
 		produit.setId(id);
+		
+		Produit __produit = this.produitService.getProduitbyDesign(produit.getDesign());
+		
+		if(__produit != null) {
+			if(produit.getId() != __produit.getId()) {
+				throw new DataNotFoundException(String.format("Product with design %s exist in the database", produit.getDesign()));
+			}
+		}
 		produit = this.produitService.updateProduit(produit);
 		
 		return Response.ok()
@@ -76,8 +90,12 @@ public class ProduitResource {
 	
 	@GET
 	@Path("/{produitId}")
-	public Produit getProduit(Produit produit,@BeanParam ProduitFilterBean filterBean) {
-		return this.produitService.getProduit(filterBean.getId());
+	public Produit getProduit(@BeanParam ProduitFilterBean filterBean) {
+		Produit produit = this.produitService.getProduit(filterBean.getId());
+		if(produit == null) {
+			throw new DataNotFoundException(String.format("Product with id %s is not found", filterBean.getId()));
+		}
+		return produit;
 	}
 	
 	
