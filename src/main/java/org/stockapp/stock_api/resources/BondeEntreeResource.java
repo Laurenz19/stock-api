@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.util.List;
 
 import org.stockapp.stock_api.HikariConnection;
+import org.stockapp.stock_api.exception.DataIntegrityException;
 import org.stockapp.stock_api.exception.DataNotFoundException;
 import org.stockapp.stock_api.model.BondeEntree;
 import org.stockapp.stock_api.model.Produit;
@@ -60,6 +61,11 @@ public class BondeEntreeResource {
 			if(produit == null) {
 				throw new DataNotFoundException(String.format("Product with id %s is not found", param.getProduit_Id()));
 			}
+			
+			if(bondeEntree.getQteEntree() == 0) {
+				throw new DataIntegrityException("The product's quantity can't be null");
+			}
+			
 			bondeEntree.setProduit(produit);
 			bondeEntree = service.createBondeEntree(bondeEntree);
 			

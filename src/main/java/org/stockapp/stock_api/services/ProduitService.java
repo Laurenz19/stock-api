@@ -4,9 +4,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.stockapp.stock_api.exception.DataNotFoundException;
+import org.stockapp.stock_api.model.BondeEntree;
 import org.stockapp.stock_api.model.Produit;
 
 import com.github.javafaker.Faker;
@@ -26,10 +28,18 @@ public class ProduitService {
 	}
 
 	public Produit createProduit(Produit produit) {
+		int init_stock = produit.getStock();
 		String values = "'"+produit.getDesign()+"', "+produit.getStock();
+		
 		q.create(table, column, values);
 		
 		produit = getProduit(maxId());
+		produit.setStock(0);
+		if(init_stock > 0) {
+			BondeEntreeService service = new BondeEntreeService(q.getConnection());
+			BondeEntree init_bon = new BondeEntree(produit, init_stock, new Date());
+			service.createBondeEntree(init_bon);
+		}
 		
 		return produit;
 	}
@@ -49,6 +59,12 @@ public class ProduitService {
 		   				Produit produit = new Produit(result.getString("design"), result.getInt("stock"));
 		   				
 		   				produit.setId(result.getString("id"));
+		   				BondeEntreeService service = new BondeEntreeService(q.getConnection());
+		   				List<BondeEntree> bons = service.getAllBondeEntrees("produit='"+produit.getId()+"'");
+		   				
+		   				for(BondeEntree bon : bons) {
+		   					produit.addBondeEntree(bon);
+		   				}
 		   				
 		   				produits.add(produit);
 		   		      } while (result.next());	
@@ -103,9 +119,10 @@ public class ProduitService {
     		}else {
     			 
     			  do {
-    				produit.setId(result.getString("id"));
-    				produit.setDesign(result.getString("design"));
-    				produit.setStock(result.getInt("stock"));
+    				  Produit __produit = new Produit(result.getString("design"), result.getInt("stock"));
+      				__produit.setId(result.getString("id"));
+      				
+      				produit = __produit;
     		      } while (result.next());	
     			
     		}
@@ -148,13 +165,24 @@ public class ProduitService {
 		for(int i = 0; i< 100; i++) {
 			int stock =10 +  (int)(Math.random()*(100));
 			Produit produit = new Produit();
-			produit.setDesign(faker.commerce().productName());
+			String product_name = faker.commerce().productName();
+			
+			produit.setDesign(this.getProductNameAvalaible(product_name));
+			
 			produit.setStock(stock);
 			this.createProduit(produit);
 		}
 		
 		produits = this.getAllProduits(); 
 		return produits;
+	}
+	
+	public String getProductNameAvalaible(String name) {
+		Faker faker = new Faker();
+		if(this.getProduitbyDesign(name) != null) {
+			name=  getProductNameAvalaible(faker.commerce().productName());
+		}
+		return name;
 	}
 	
 	public String maxId() {

@@ -35,10 +35,17 @@ public class BondeEntreeService {
 		String values = "'"+produit_id+"', "+bondeEntree.getQteEntree()+", '"+date+"'";
 		q.create(table, column, values);
 		
+		ProduitService produitService = new ProduitService(q.getConnection());
+		if(bondeEntree.getProduit().getStock() > 0) {
+			bondeEntree.getProduit().setStock(new_stock(bondeEntree.getProduit().getStock(), bondeEntree.getQteEntree()));
+		}else {
+			bondeEntree.getProduit().setStock(new_stock(0, bondeEntree.getQteEntree()));
+		}
+		
+		produitService.updateProduit(bondeEntree.getProduit());
+	    
 		
 		bondeEntree = this.getBondeEntree(maxId());
-		
-	    
 		return bondeEntree;
 		
 	}
@@ -60,9 +67,6 @@ public class BondeEntreeService {
 	   			 do {
 	   				BondeEntree bondeEntree = new BondeEntree(produitService.getProduit(result.getString("produit")),result.getInt("qteEntree"), result.getDate("dateEntree"));
 					bondeEntree.setId(result.getString("id"));
-					/*bondeEntree.setProduit(produitService.getProduit(result.getString("produit")));
-					bondeEntree.setQteEntree(result.getInt("qteEntree"));
-					bondeEntree.setDateEntree(result.getDate("dateEntree"));*/
 	   				
 	   				bons.add(bondeEntree);
 	   		      } while (result.next());	
@@ -72,6 +76,8 @@ public class BondeEntreeService {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			 hikariConn.close();
 		}
     	
     	return bons;
@@ -137,7 +143,6 @@ public class BondeEntreeService {
 	public List<Produit> LoadFixtures(){
 		ProduitService produitService = new ProduitService(q.getConnection());
 		List<Produit> produits= produitService.getAllProduits();
-		this.deleteBondeEntree("");
 		
 		  for (Produit produit : produits) {
 			 
@@ -146,8 +151,6 @@ public class BondeEntreeService {
 					BondeEntree bondeEntree = new BondeEntree(produit, qte, new Date());
 					bondeEntree = this.createBondeEntree(bondeEntree);
 					produit.addBondeEntree(bondeEntree);
-					produit.setStock(new_stock(produit.getStock(), bondeEntree.getQteEntree()));
-					
 				}
 			
 	      }
