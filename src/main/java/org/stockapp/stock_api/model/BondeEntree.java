@@ -2,7 +2,9 @@ package org.stockapp.stock_api.model;
 
 import java.util.Date;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 
 /**
@@ -13,6 +15,9 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 public class BondeEntree {
 	
 	private String id;
+	
+	@XmlTransient
+	@JsonbTransient
 	private Produit produit;
 	private int qteEntree;
 	private Date dateEntree;

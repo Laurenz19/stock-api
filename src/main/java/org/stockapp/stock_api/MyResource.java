@@ -3,7 +3,7 @@ package org.stockapp.stock_api;
 /*import java.sql.ResultSet;
 import java.sql.SQLException;*/
 
-import org.stockapp.stock_api.services.Queries;
+//import org.stockapp.stock_api.services.Queries;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -16,7 +16,7 @@ import jakarta.ws.rs.core.MediaType;
 @Path("myresource")
 public class MyResource {
 	
-	Queries queries = new Queries();
+	//Queries queries = new Queries();
     /**
      * Method handling HTTP GET requests. The returned object will be sent
      * to the client as "text/plain" media type.
@@ -45,7 +45,7 @@ public class MyResource {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
-    	queries.delete("produit", "id='P0000'");
+    	//queries.delete("produit", "id='P0000'");
     	
         return "Got it!";
     }

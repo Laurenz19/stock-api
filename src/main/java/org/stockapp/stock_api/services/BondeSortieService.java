@@ -1,5 +1,6 @@
 package org.stockapp.stock_api.services;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -9,10 +10,16 @@ import org.stockapp.stock_api.model.BondeSortie;
 
 public class BondeSortieService {
 	
-	private Queries q = new Queries();
+	private Queries q;
 	private String table = "bondesortie";
 	private String column = "produit, qteSortie, dateSortie";
 	
+	
+	public BondeSortieService(Connection con) {
+		super();
+		this.q = new Queries(con);
+	}
+
 	public BondeSortie createBondeEntree(BondeSortie bondeSortie) {
 		
 		String values = "'"+bondeSortie.getProduit().getId()+"', "+bondeSortie.getQteSortie()+", '"+bondeSortie.getDateSortie()+"'";
@@ -26,7 +33,7 @@ public class BondeSortieService {
     	System.out.println(result);
     	List<BondeSortie> bons = new ArrayList<BondeSortie>();
     	BondeSortie bondeSortie = new BondeSortie();
-    	ProduitService produitService = new ProduitService();
+    	ProduitService produitService = new ProduitService(q.getConnection());
     	
     	try {
 			while (result.next()){
@@ -53,7 +60,7 @@ public class BondeSortieService {
     	System.out.println(result);
 
     	BondeSortie bondeSortie = new BondeSortie();
-    	ProduitService produitService = new ProduitService();
+    	ProduitService produitService = new ProduitService(q.getConnection());
     	
     	try {
 			while (result.next()){

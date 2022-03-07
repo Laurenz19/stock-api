@@ -3,9 +3,8 @@ package org.stockapp.stock_api.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlTransient;
+
 
 /**
  *Created on 10/02/2022
@@ -17,11 +16,13 @@ public class Produit {
 	private String id;
 	private String design;
 	private int stock;
+
 	private Map<String, BondeEntree> bondeEntrees;
 	private Map<String, BondeSortie> bondeSorties;
 	
 	public Produit() {
-		
+		this.bondeEntrees = new HashMap<>();
+		this.bondeSorties = new HashMap<>();
 	}
 	
 	public Produit(String design, int stock) {
@@ -52,16 +53,11 @@ public class Produit {
 	}
 
 	/**
-	 * Return Collection | bondeEntree
+	 * Return Collection | BondeEntree
 	 **/
-	@XmlTransient
-	@JsonbTransient
+	
 	public Map<String, BondeEntree> getBondeEntrees() {
 		return bondeEntrees;
-	}
-	
-	public void setBondeEntrees(Map<String, BondeEntree> bondeEntrees) {
-		this.bondeEntrees = bondeEntrees;
 	}
 	
 	public BondeEntree addBondeEntree(BondeEntree bondeEntree) {
@@ -74,16 +70,11 @@ public class Produit {
 	}
 	
 	/**
-	 * Return Collection | bondeSortie
+	 * Return Collection | BondeSortie
 	 **/
-	@XmlTransient
-	@JsonbTransient
+	
 	public Map<String, BondeSortie> getBondeSorties() {
 		return bondeSorties;
-	}
-
-	public void setBondeSorties(Map<String, BondeSortie> bondeSorties) {
-		this.bondeSorties = bondeSorties;
 	}
 
 	public BondeSortie addBondeSortie(BondeSortie bondeSortie) {

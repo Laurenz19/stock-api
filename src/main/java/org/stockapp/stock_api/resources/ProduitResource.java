@@ -2,9 +2,12 @@ package org.stockapp.stock_api.resources;
 
 
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.stockapp.stock_api.HikariConnection;
 import org.stockapp.stock_api.exception.DataNotFoundException;
 import org.stockapp.stock_api.model.Produit;
 import org.stockapp.stock_api.resources.beans.ProduitFilterBean;
@@ -28,7 +31,10 @@ import jakarta.ws.rs.core.UriInfo;
 @Consumes(MediaType.APPLICATION_JSON)
 public class ProduitResource {
 	
-	ProduitService produitService = new ProduitService();
+	private HikariConnection hikariConn = new HikariConnection("localhost", "3306", "root", "", "stockdb");
+	private Connection connection= hikariConn.getConnection();
+	
+	ProduitService produitService = new ProduitService(connection);
 	
 	@GET
 	public List<Produit> getAllProduits(@BeanParam ProduitFilterBean filterBean) {
@@ -111,6 +117,30 @@ public class ProduitResource {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getMaxID() {
 		return this.produitService.maxId();
+	}
+	
+	/**
+	 * Here we implement the sub-resource
+	 * it is annotated with Path annotation but no with HTTP method 
+	 **/
+	@Path("/{produitId}/bondeEntrees")
+	public BondeEntreeResource getBondeEntreeResource() {
+		return new BondeEntreeResource();
+	}
+	
+	/**
+	 * Here we implement the sub-resource
+	 * it is annotated with Path annotation but no with HTTP method 
+	 **/
+	@GET
+	@Path("/test")
+	public String test() throws SQLException {
+		try {
+			return "test";
+		}finally {
+			 hikariConn.close();
+		}
+		
 	}
 	
 

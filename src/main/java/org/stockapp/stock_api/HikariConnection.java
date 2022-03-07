@@ -2,7 +2,7 @@ package org.stockapp.stock_api;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
+/*import java.time.Duration;*/
 
 import javax.sql.DataSource;
 
@@ -26,8 +26,8 @@ public class HikariConnection {
         this.hikaConfig.setPassword(db_password);
         this.hikaConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
         
-        this.hikaConfig.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
-        this.hikaConfig.setIdleTimeout(Duration.ofMinutes(2).toMillis());
+       /* this.hikaConfig.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
+        this.hikaConfig.setIdleTimeout(Duration.ofMinutes(2).toMillis());*/
         
         HikariDataSource hikariDataSource = new HikariDataSource(hikaConfig);
         HikariConnection.dataSource = hikariDataSource;
@@ -38,11 +38,27 @@ public class HikariConnection {
 	    	
 	    	Connection connection = null;
 	    	try {
-				connection =  HikariConnection.dataSource.getConnection();
-				System.out.println("App connected with the database");
+	    		connection =  HikariConnection.dataSource.getConnection();
+				System.out.println("App connected with the database 1");
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 	        return connection;
 	  }
+	 
+	 public void close() {
+		if(HikariConnection.dataSource != null) {
+			System.out.println("true");
+			try {
+				HikariConnection.dataSource.getConnection().close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}else {
+			System.out.println("false");
+		}
+	 }
+	 
 }

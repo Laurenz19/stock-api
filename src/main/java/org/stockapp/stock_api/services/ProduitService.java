@@ -1,5 +1,6 @@
 package org.stockapp.stock_api.services;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -12,11 +13,18 @@ import com.github.javafaker.Faker;
 
 public class ProduitService {
 	
-	private Queries q = new Queries();
+	private Queries q;
 	private String table = "produit";
 	private String column = "design, stock";
 	
 	
+	
+	
+	public ProduitService(Connection con) {
+		super();
+		this.q = new Queries(con);
+	}
+
 	public Produit createProduit(Produit produit) {
 		String values = "'"+produit.getDesign()+"', "+produit.getStock();
 		q.create(table, column, values);
@@ -38,11 +46,9 @@ public class ProduitService {
 		   		}else {
 		   			 
 		   			 do {
-		   				Produit produit = new Produit();
+		   				Produit produit = new Produit(result.getString("design"), result.getInt("stock"));
 		   				
 		   				produit.setId(result.getString("id"));
-		   				produit.setDesign(result.getString("design"));
-		   				produit.setStock(result.getInt("stock"));
 		   				
 		   				produits.add(produit);
 		   		      } while (result.next());	
@@ -68,9 +74,10 @@ public class ProduitService {
     		}else {
     			 
     			 do {
-    				produit.setId(result.getString("id"));
-    				produit.setDesign(result.getString("design"));
-    				produit.setStock(result.getInt("stock"));
+    				Produit __produit = new Produit(result.getString("design"), result.getInt("stock"));
+    				__produit.setId(result.getString("id"));
+    				
+    				produit = __produit;
     		      } while (result.next());	
     			
     		}
@@ -95,7 +102,7 @@ public class ProduitService {
     		     produit = null;
     		}else {
     			 
-    			 do {
+    			  do {
     				produit.setId(result.getString("id"));
     				produit.setDesign(result.getString("design"));
     				produit.setStock(result.getInt("stock"));
@@ -136,11 +143,11 @@ public class ProduitService {
 	public List<Produit> LoadFixtures(){
 		List<Produit> produits = new ArrayList<Produit>();
 		Faker faker = new Faker();
-		Produit produit = new Produit();
 		this.deleteProduit("");
 		
 		for(int i = 0; i< 100; i++) {
 			int stock =10 +  (int)(Math.random()*(100));
+			Produit produit = new Produit();
 			produit.setDesign(faker.commerce().productName());
 			produit.setStock(stock);
 			this.createProduit(produit);
@@ -165,11 +172,9 @@ public class ProduitService {
 	   		}else {
 	   			 
 	   			 do {
-	   				Produit produit = new Produit();
+	   				Produit produit = new Produit(result.getString("design"), result.getInt("stock"));
 	   				
 	   				produit.setId(result.getString("id"));
-	   				produit.setDesign(result.getString("design"));
-	   				produit.setStock(result.getInt("stock"));
 	   				
 	   				produits.add(produit);
 	   		      } while (result.next());	

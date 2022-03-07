@@ -5,8 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.stockapp.stock_api.HikariConnection;
-
 
 /**
  *Created on 10/02/2022
@@ -14,9 +12,22 @@ import org.stockapp.stock_api.HikariConnection;
  **/
 public class Queries {
 	
-	private HikariConnection hikariConn = new HikariConnection("localhost", "3306", "root", "", "stockdb");
-	private Connection connection= hikariConn.getConnection();
+	private Connection connection;
+
 	
+	public Queries(Connection connection) {
+		super();
+		this.setConnection(connection);
+	}
+
+	public Connection getConnection() {
+		return this.connection;
+	}
+
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
+
 	public void create(String table, String columns, String values){
 		
 		String sql = "INSERT INTO " + table +" ("+ columns + ") VALUES (" + values + ")";
@@ -55,17 +66,20 @@ public class Queries {
 			sql = "SELECT "+ columns + " FROM " + table + " WHERE " + conditions;
 		}
 		
+		PreparedStatement statement;
+		
 		try{	
-			PreparedStatement statement = connection.prepareStatement(sql);
+			statement = connection.prepareStatement(sql);
+			
 			ResultSet result = statement.executeQuery(sql);
 			System.out.println(statement);
 			System.out.println(result);
-			return result;
-			
+			return result;	
 			
 		}catch(SQLException e){
 			throw new RuntimeException(e);
 		}
+		
 		
 	}
 	
