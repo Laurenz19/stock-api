@@ -167,7 +167,7 @@ public class ProduitService {
 			Produit produit = new Produit();
 			String product_name = faker.commerce().productName();
 			
-			produit.setDesign(this.getProductNameAvalaible(product_name));
+			produit.setDesign(this.getProductNameAvailable(product_name));
 			
 			produit.setStock(stock);
 			this.createProduit(produit);
@@ -177,10 +177,10 @@ public class ProduitService {
 		return produits;
 	}
 	
-	public String getProductNameAvalaible(String name) {
+	public String getProductNameAvailable(String name) {
 		Faker faker = new Faker();
 		if(this.getProduitbyDesign(name) != null) {
-			name=  getProductNameAvalaible(faker.commerce().productName());
+			name=  getProductNameAvailable(faker.commerce().productName());
 		}
 		return name;
 	}
