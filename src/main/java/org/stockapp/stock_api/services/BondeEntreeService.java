@@ -1,147 +1,173 @@
 package org.stockapp.stock_api.services;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.stockapp.stock_api.HikariConnection;
+import org.stockapp.stock_api.DatabaseConnection;
+import org.stockapp.stock_api.exception.DataNotFoundException;
 import org.stockapp.stock_api.model.BondeEntree;
 import org.stockapp.stock_api.model.Produit;
 
 public class BondeEntreeService {
 	
-	private Queries q;
+	private Queries q = new Queries();
 	private String table = "bondeentree";
 	private String column = "produit, qteEntree, dateEntree";
-	private HikariConnection hikariConn = new HikariConnection("localhost", "3306", "root", "", "stockdb");
-	
-	
-	public BondeEntreeService(Connection con) {
-		super();
-		this.q = new Queries(con);
-	}
+	private UsefulFunctions useful = new UsefulFunctions();
+
 
 	public BondeEntree createBondeEntree(BondeEntree bondeEntree) {
-		String pattern = "yyyy-MM-dd";
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-		String date = simpleDateFormat.format(bondeEntree.getDateEntree());
 		
 		String produit_id = bondeEntree.getProduit().getId();
 		
-		String values = "'"+produit_id+"', "+bondeEntree.getQteEntree()+", '"+date+"'";
+		String values = "'"+produit_id+"', "+bondeEntree.getQteEntree()+", '"+useful.formatDate(bondeEntree.getDateEntree())+"'";
 		q.create(table, column, values);
 		
-		ProduitService produitService = new ProduitService(q.getConnection());
+		ProduitService produitService = new ProduitService();
 		if(bondeEntree.getProduit().getStock() > 0) {
-			bondeEntree.getProduit().setStock(new_stock(bondeEntree.getProduit().getStock(), bondeEntree.getQteEntree()));
+			bondeEntree.getProduit().setStock(useful.new_stock(bondeEntree.getProduit().getStock(), bondeEntree.getQteEntree(), 0));
 		}else {
-			bondeEntree.getProduit().setStock(new_stock(0, bondeEntree.getQteEntree()));
+			bondeEntree.getProduit().setStock(useful.new_stock(0, bondeEntree.getQteEntree(), 0));
 		}
 		
 		produitService.updateProduit(bondeEntree.getProduit());
 	    
 		
-		bondeEntree = this.getBondeEntree(maxId());
+		bondeEntree = this.getBondeEntree(q.maxId(this.table));
 		return bondeEntree;
 		
 	}
 	
-	public List<BondeEntree> getAllBondeEntrees(String condition){
-		ResultSet result = q.read(table, "*", condition);
-    	System.out.println(result);
-    	List<BondeEntree> bons = new ArrayList<BondeEntree>();
-   
-    	ProduitService produitService = new ProduitService(q.getConnection());
-    	
-    	try {
-    		
-    		if (result.next() == false) {
-    			bons = new ArrayList<BondeEntree>();
-    			System.out.println("vide");
-	   		}else {
-	   			 
-	   			 do {
-	   				BondeEntree bondeEntree = new BondeEntree(produitService.getProduit(result.getString("produit")),result.getInt("qteEntree"), result.getDate("dateEntree"));
-					bondeEntree.setId(result.getString("id"));
-	   				
-	   				bons.add(bondeEntree);
-	   		      } while (result.next());	
-	   			
-	   		}
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			 hikariConn.close();
+	public List<BondeEntree> readBondeEntrees(String columns, String conditions) {
+		
+		String sql = "SELECT "+ columns + " FROM " + this.table;
+		
+		if(conditions != "") {
+			sql = "SELECT "+ columns + " FROM " + this.table + " WHERE " + conditions;
 		}
-    	
-    	return bons;
+		
+		List<BondeEntree> bons = new ArrayList<BondeEntree>();
+		ProduitService produitService = new ProduitService();
+		
+		try{
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			Connection connection = dbConnection.getConnection();
+			PreparedStatement statement = connection.prepareStatement(sql);
+			
+			ResultSet result = statement.executeQuery(sql);
+			
+				if (result.next() == false) {
+	    			bons = new ArrayList<BondeEntree>();
+		   		}else {
+		   			 
+		   			 do {
+		   				BondeEntree bondeEntree = new BondeEntree(produitService.getProduit(result.getString("produit")),result.getInt("qteEntree"), result.getDate("dateEntree"));
+						bondeEntree.setId(result.getString("id"));
+		   				
+		   				bons.add(bondeEntree);
+		   		      } while (result.next());	
+		   		}
+				result.close();
+				statement.close();
+				connection.close();
+			
+		}catch(SQLException e){
+			throw new RuntimeException(e);
+		}
+		
+		return bons;
+	}
+	
+    public BondeEntree readBondeEntree(String columns, String conditions) {
+		
+		String sql = "SELECT "+ columns + " FROM " + this.table;
+		
+		if(conditions != "") {
+			sql = "SELECT "+ columns + " FROM " + this.table + " WHERE " + conditions;
+		}
+		
+		BondeEntree bondeEntree = new BondeEntree();
+		ProduitService produitService = new ProduitService();
+		
+		try{
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			Connection connection = dbConnection.getConnection();
+			PreparedStatement statement = connection.prepareStatement(sql);
+			
+			ResultSet result = statement.executeQuery(sql);
+			
+				if (result.next() == false) {
+					bondeEntree = null;
+		   		}else {
+		   			 
+		   			 do {
+		   				bondeEntree = new BondeEntree(produitService.getProduit(result.getString("produit")),result.getInt("qteEntree"), result.getDate("dateEntree"));
+						bondeEntree.setId(result.getString("id"));
+		   				
+		   		      } while (result.next());	
+		   		}
+				result.close();
+				statement.close();
+				connection.close();
+			
+		}catch(SQLException e){
+			throw new RuntimeException(e);
+		}
+		
+		return bondeEntree;
+	}
+	
+	public List<BondeEntree> getAllBondeEntrees(String condition){
+    	return this.readBondeEntrees("*", condition);
 	}
 	
 	public BondeEntree getBondeEntree(String id){
 		String condition= "id= '"+id+"'";
-		ResultSet result = q.read(table, "*", condition);
-    	System.out.println("I am here");
-    	
-    	BondeEntree bondeEntree = new BondeEntree();
-    	ProduitService produitService = new ProduitService(q.getConnection());
-    	
-    	try {
-    		
-    		if (result.next() == false) {
-    			bondeEntree = null;
-	   		}else {
-	   			 
-	   			 do {
-	   				BondeEntree __bondeEntree = new BondeEntree(produitService.getProduit(result.getString("produit")),result.getInt("qteEntree"), result.getDate("dateEntree"));
-					__bondeEntree.setId(result.getString("id"));
-					/*bondeEntree.setProduit(produitService.getProduit(result.getString("produit")));
-					bondeEntree.setQteEntree(result.getInt("qteEntree"));
-					bondeEntree.setDateEntree(result.getDate("dateEntree"));*/
-					
-					
-					bondeEntree = __bondeEntree;
-	   		      } while (result.next());	
-	   			 
-	   			//q.connection().close();
-	   		}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			 hikariConn.close();
-		}
-    	
-    	return bondeEntree;
+		return this.readBondeEntree("*", condition);
 	}
 	
 	public BondeEntree updateBondeEntree(BondeEntree bondeEntree) {
 		BondeEntree __bondeEntree = this.getBondeEntree(bondeEntree.getId());
+		ProduitService produitService = new ProduitService();
+		
 		if(__bondeEntree == null) {
-			System.out.println("The entrance voucher with an id #"+bondeEntree.getId()+ " is not exist!");
+			throw new DataNotFoundException(String.format("The entrance voucher with id %s is not found", bondeEntree.getId()));
 		}
-		String values = "produit='"+bondeEntree.getProduit().getId()+"', qteEntree="+bondeEntree.getQteEntree()+", dateEntree='"+bondeEntree.getDateEntree()+"'";
+		
+		int new_stock = __bondeEntree.getProduit().getStock() - (__bondeEntree.getQteEntree() - bondeEntree.getQteEntree());
+		bondeEntree.setProduit(__bondeEntree.getProduit());
+		bondeEntree.getProduit().setStock(new_stock);
+		
+		produitService.updateProduit(bondeEntree.getProduit());
+		
+		String values = "produit='"+bondeEntree.getProduit().getId()+"', qteEntree="+bondeEntree.getQteEntree()+", dateEntree='"+useful.formatDate(bondeEntree.getDateEntree())+"'";
 		String condition= "id= '"+bondeEntree.getId()+"'";
 		q.update(table, values, condition);
 		return bondeEntree;
 	}
 	
-	public void deleteBondeEntree(String id) {	
-		String condition= "id= '"+id+"'";
-		if(id == "") {
-			condition = "";
-		}
+	public Produit deleteBondeEntree(BondeEntree bondeEntree) {	
+		String condition= "id= '"+bondeEntree.getId()+"'";
+		ProduitService produitService = new ProduitService();
+		
+		String id_produit = bondeEntree.getProduit().getId();
+		
+		int new_stock = bondeEntree.getProduit().getStock() - bondeEntree.getQteEntree();
+		bondeEntree.getProduit().setStock(new_stock);
+		
+		produitService.updateProduit(bondeEntree.getProduit());
 		
 		q.delete(table, condition);
+		return produitService.getProduit(id_produit);
 	}
 	
 	public List<Produit> LoadFixtures(){
-		ProduitService produitService = new ProduitService(q.getConnection());
+		ProduitService produitService = new ProduitService();
 		List<Produit> produits= produitService.getAllProduits();
 		
 		  for (Produit produit : produits) {
@@ -156,13 +182,5 @@ public class BondeEntreeService {
 	      }
 		
 		return produits;
-	}
-	
-	public int new_stock(int ancien_stock, int qteEntree) {
-		return ancien_stock + qteEntree;
-	}
-	
-	public String maxId() {
-		return q.maxId(table);
 	}
 }

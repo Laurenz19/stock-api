@@ -40,6 +40,7 @@ public class BondeEntree {
 	public void setId(String id) {
 		this.id = id;
 	}
+	
 	public Produit getProduit() {
 		return produit;
 	}

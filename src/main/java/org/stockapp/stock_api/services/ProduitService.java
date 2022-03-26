@@ -1,31 +1,27 @@
 package org.stockapp.stock_api.services;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.stockapp.stock_api.DatabaseConnection;
 import org.stockapp.stock_api.exception.DataNotFoundException;
 import org.stockapp.stock_api.model.BondeEntree;
+import org.stockapp.stock_api.model.BondeSortie;
 import org.stockapp.stock_api.model.Produit;
 
 import com.github.javafaker.Faker;
 
 public class ProduitService {
 	
-	private Queries q;
+	private Queries q = new Queries();
 	private String table = "produit";
 	private String column = "design, stock";
 	
-	
-	
-	
-	public ProduitService(Connection con) {
-		super();
-		this.q = new Queries(con);
-	}
 
 	public Produit createProduit(Produit produit) {
 		int init_stock = produit.getStock();
@@ -33,107 +29,185 @@ public class ProduitService {
 		
 		q.create(table, column, values);
 		
-		produit = getProduit(maxId());
+		produit = getProduit(q.maxId(this.table));
 		produit.setStock(0);
 		if(init_stock > 0) {
-			BondeEntreeService service = new BondeEntreeService(q.getConnection());
+			BondeEntreeService service = new BondeEntreeService();
 			BondeEntree init_bon = new BondeEntree(produit, init_stock, new Date());
 			service.createBondeEntree(init_bon);
 		}
 		
-		return produit;
+		return this.getProduit(produit.getId());
 	}
 	
-	public List<Produit> getAllProduits(){
-		ResultSet result = q.read(table, "*", "");
-    	System.out.println(result);
-    	List<Produit> produits = new ArrayList<Produit>();
-    	
-    	try {
-    			
-	    		if (result.next() == false) {
+	
+	 public List<Produit> readProducts(String columns, String conditions) {
+		
+		String sql = "SELECT "+ columns + " FROM " + this.table;
+		
+		if(conditions != "") {
+			sql = "SELECT "+ columns + " FROM " + this.table + " WHERE " + conditions;
+		}
+		
+		List<Produit> produits = new ArrayList<Produit>();
+		
+		try{
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			Connection connection = dbConnection.getConnection();
+			System.out.println(connection);
+			PreparedStatement statement = connection.prepareStatement(sql);
+			
+			ResultSet result = statement.executeQuery(sql);
+			
+				if (result.next() == false) {
 	    			produits = new ArrayList<Produit>();
 		   		}else {
 		   			 
 		   			 do {
 		   				Produit produit = new Produit(result.getString("design"), result.getInt("stock"));
-		   				
 		   				produit.setId(result.getString("id"));
-		   				BondeEntreeService service = new BondeEntreeService(q.getConnection());
-		   				List<BondeEntree> bons = service.getAllBondeEntrees("produit='"+produit.getId()+"'");
 		   				
-		   				for(BondeEntree bon : bons) {
-		   					produit.addBondeEntree(bon);
+		   				
+		   				/****************************************
+		   				 * Get All BondeEntree for each product *
+		   				 ****************************************/
+		   				
+		   				String sql1 = "SELECT * FROM bondeentree WHERE produit='"+produit.getId()+"'";
+		   				
+		   				
+		   				PreparedStatement statement1 = connection.prepareStatement(sql1);
+		   				ResultSet result1 = statement1.executeQuery(sql1);
+		   				
+		   				while(result1.next()) {
+		   					System.out.println(result1.getString("produit"));
+		   					BondeEntree bondeEntree = new BondeEntree(produit,result1.getInt("qteEntree"), result1.getDate("dateEntree"));
+							bondeEntree.setId(result1.getString("id"));
+							produit.addBondeEntree(bondeEntree);
 		   				}
+		   				
+		   				result1.close();
+						statement1.close();
+		   				
+		   				/****************************************
+		   				 * Get All BondeSorties for each product*
+		   				 ****************************************/
+		   				
+		   				
+		   				String sql2 = "SELECT * FROM bondesortie WHERE produit='"+produit.getId()+"'";
+		   				PreparedStatement statement2 = connection.prepareStatement(sql2);
+		   				ResultSet result2 = statement2.executeQuery(sql2);
+		   				
+		   				while(result2.next()) {
+		   					BondeSortie bondeSortie = new BondeSortie(produit,result2.getInt("qteSortie"), result2.getDate("dateSortie"));
+							bondeSortie.setId(result2.getString("id"));
+							produit.addBondeSortie(bondeSortie);
+		   				}
+		   				
+		   				result2.close();
+						statement2.close();
 		   				
 		   				produits.add(produit);
 		   		      } while (result.next());	
-		   			
 		   		}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				result.close();
+				statement.close();
+				connection.close();
+			
+		}catch(SQLException e){
+			throw new RuntimeException(e);
 		}
-    	
-    	return produits;
+		
+		return produits;
+	}
+	 
+	 
+	 public Produit readProduct(String columns, String conditions) {
+			
+			String sql = "SELECT "+ columns + " FROM " + this.table;
+			
+			if(conditions != "") {
+				sql = "SELECT "+ columns + " FROM " + this.table + " WHERE " + conditions;
+			}
+			Produit produit = new Produit();
+			
+			try{
+				DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+				Connection connection = dbConnection.getConnection();
+				
+				PreparedStatement statement = connection.prepareStatement(sql);
+				
+				ResultSet result = statement.executeQuery(sql);
+				
+					if (result.next() == false) {
+		    			produit = null;
+			   		}else {
+			   			 
+			   			 do {
+			   				produit = new Produit(result.getString("design"), result.getInt("stock"));
+			   				produit.setId(result.getString("id"));
+			   				
+			   				/****************************************
+			   				 * Get All BondeEntrees for the product *
+			   				 ****************************************/
+			   				
+			   				String sql1 = "SELECT * FROM bondeentree WHERE produit='"+produit.getId()+"'";
+			   				
+			   				PreparedStatement statement1 = connection.prepareStatement(sql1);
+			   				ResultSet result1 = statement1.executeQuery(sql1);
+			   				
+			   				while(result1.next()) {
+			   					BondeEntree bondeEntree = new BondeEntree(produit,result1.getInt("qteEntree"), result1.getDate("dateEntree"));
+								bondeEntree.setId(result1.getString("id"));
+								produit.addBondeEntree(bondeEntree);
+			   				}
+			   				
+			   				result1.close();
+							statement1.close();
+			   				/****************************************
+			   				 * Get All BondeSorties for the product *
+			   				 ****************************************/
+			   				
+			   				
+			   				String sql2 = "SELECT * FROM bondesortie WHERE produit='"+produit.getId()+"'";
+			   				PreparedStatement statement2 = connection.prepareStatement(sql2);
+			   				ResultSet result2 = statement2.executeQuery(sql2);
+			   				
+			   				while(result2.next()) {
+			   					BondeSortie bondeSortie = new BondeSortie(produit, result2.getInt("qteSortie"), result2.getDate("dateSortie"));
+								bondeSortie.setId(result2.getString("id"));
+								produit.addBondeSortie(bondeSortie);
+			   				}
+			   				
+			   				result2.close();
+							statement2.close();
+			   				
+			   		      } while (result.next());	
+			   		}
+					
+					result.close();
+					statement.close();
+					connection.close();
+				
+			}catch(SQLException e){
+				throw new RuntimeException(e);
+			}
+			
+			return produit;
+			
+		} 
+	
+	public List<Produit> getAllProduits(){
+    	return this.readProducts("*", "");
 	}
 	
 	public Produit getProduit(String id) {
 		String condition= "id= '"+id+"'";
-		ResultSet result = q.read(table, "*", condition);
-    	System.out.println(result);
-    	Produit produit = new Produit();
-    	
-    	try {
-    		if (result.next() == false) {
-    		     produit = null;
-    		}else {
-    			 
-    			 do {
-    				Produit __produit = new Produit(result.getString("design"), result.getInt("stock"));
-    				__produit.setId(result.getString("id"));
-    				
-    				produit = __produit;
-    		      } while (result.next());	
-    			
-    		}
-    		
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-    	return produit;
-    
+		return this.readProduct("*", condition);
 	}
 	
 	public Produit getProduitbyDesign(String design) {
 		String condition= "design= '"+design+"'";
-		ResultSet result = q.read(table, "*", condition);
-    	System.out.println(result);
-    	Produit produit = new Produit();
-    	
-    	try {
-    		if (result.next() == false) {
-    		     produit = null;
-    		}else {
-    			 
-    			  do {
-    				  Produit __produit = new Produit(result.getString("design"), result.getInt("stock"));
-      				__produit.setId(result.getString("id"));
-      				
-      				produit = __produit;
-    		      } while (result.next());	
-    			
-    		}
-    		
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-    	return produit;
-    
+		return this.readProduct("*", condition);
 	}
 	
 	
@@ -156,6 +230,11 @@ public class ProduitService {
 		
 		q.delete(table, condition);
 	}
+
+	
+	public List<Produit> searchFilter(String condition){
+		return this.readProducts("*", condition);
+	}
 	
 	public List<Produit> LoadFixtures(){
 		List<Produit> produits = new ArrayList<Produit>();
@@ -167,7 +246,7 @@ public class ProduitService {
 			Produit produit = new Produit();
 			String product_name = faker.commerce().productName();
 			
-			produit.setDesign(this.getProductNameAvailable(product_name));
+			produit.setDesign(this.getProductNameAvalaible(product_name));
 			
 			produit.setStock(stock);
 			this.createProduit(produit);
@@ -177,44 +256,12 @@ public class ProduitService {
 		return produits;
 	}
 	
-	public String getProductNameAvailable(String name) {
+	public String getProductNameAvalaible(String name) {
 		Faker faker = new Faker();
 		if(this.getProduitbyDesign(name) != null) {
-			name=  getProductNameAvailable(faker.commerce().productName());
+			name=  getProductNameAvalaible(faker.commerce().productName());
 		}
 		return name;
-	}
-	
-	public String maxId() {
-		return q.maxId(table);
-	}
-	
-	public List<Produit> searchFilter(String condition){
-		ResultSet result = q.read(table, "*", condition);
-    	System.out.println(result);
-    	List<Produit> produits = new ArrayList<Produit>();
-    	
-    	try {
-    		if (result.next() == false) {
-    			produits = new ArrayList<Produit>();
-	   		}else {
-	   			 
-	   			 do {
-	   				Produit produit = new Produit(result.getString("design"), result.getInt("stock"));
-	   				
-	   				produit.setId(result.getString("id"));
-	   				
-	   				produits.add(produit);
-	   		      } while (result.next());	
-	   			
-	   		}
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-    	return produits;
 	}
 	
 }

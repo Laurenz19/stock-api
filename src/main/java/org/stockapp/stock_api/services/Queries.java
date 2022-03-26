@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.stockapp.stock_api.DatabaseConnection;
+
 
 /**
  *Created on 10/02/2022
@@ -14,29 +16,19 @@ public class Queries {
 	
 	private Connection connection;
 
-	
-	public Queries(Connection connection) {
-		super();
-		this.setConnection(connection);
-	}
-
-	public Connection getConnection() {
-		return this.connection;
-	}
-
-	public void setConnection(Connection connection) {
-		this.connection = connection;
-	}
-
 	public void create(String table, String columns, String values){
 		
 		String sql = "INSERT INTO " + table +" ("+ columns + ") VALUES (" + values + ")";
+		
 		try {
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			connection = dbConnection.getConnection();
 			PreparedStatement statement = connection.prepareStatement(sql);
 			System.out.println("Created");
-			System.out.println(statement);
+		
 			statement.execute();
 			statement.close();
+			connection.close();
 		}catch(SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -46,42 +38,19 @@ public class Queries {
 		
 		String sql = "UPDATE " + table + " SET "+ values + " WHERE " + conditions;
 		
-		try{	
+		try{
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			connection = dbConnection.getConnection();
 			PreparedStatement statement = connection.prepareStatement(sql);
 			System.out.println("Updated");
-			System.out.println(statement);
+			
 			statement.execute();
 			statement.close();
-			
+			connection.close();
 		}catch(SQLException e){
 			throw new RuntimeException(e);
 		}
 	} 
-	
-	public ResultSet read(String table, String columns, String conditions) {
-		
-		String sql = "SELECT "+ columns + " FROM " + table;
-		
-		if(conditions != "") {
-			sql = "SELECT "+ columns + " FROM " + table + " WHERE " + conditions;
-		}
-		
-		PreparedStatement statement;
-		
-		try{	
-			statement = connection.prepareStatement(sql);
-			
-			ResultSet result = statement.executeQuery(sql);
-			System.out.println(statement);
-			System.out.println(result);
-			return result;	
-			
-		}catch(SQLException e){
-			throw new RuntimeException(e);
-		}
-		
-		
-	}
 	
 	public void delete(String table, String conditions) {
 		String sql = "DELETE FROM " + table;
@@ -91,12 +60,13 @@ public class Queries {
 		}
 		
 		try{
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			connection = dbConnection.getConnection();
 			PreparedStatement statement = connection.prepareStatement(sql);
-			System.out.println("deleted");
-			System.out.println(statement);
 			statement.execute();
-			statement.close();
 			
+			statement.close();
+			connection.close();
 		}catch(SQLException e){
 			throw new RuntimeException(e);
 		}
@@ -108,6 +78,8 @@ public class Queries {
 		String id= "";
 		
 		try{	
+			DatabaseConnection dbConnection = new DatabaseConnection("localhost", "3306", "stockdb", "root", "");
+			connection = dbConnection.getConnection();
 			PreparedStatement statement = connection.prepareStatement(sql);
 			ResultSet result = statement.executeQuery();
 			System.out.println(statement);
@@ -116,6 +88,9 @@ public class Queries {
 			while (result.next()){
 				id=result.getString("max_id");
 			}
+			
+			statement.close();
+			connection.close();
 			return id;
 			
 		}catch(SQLException e){
